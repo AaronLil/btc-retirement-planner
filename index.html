@@ -220,10 +220,11 @@
         </div>
 
         <div class="text-center mt-8">
-            <p data-lang-key="legalDisclaimer" class="text-xs text-gray-500">
-                <strong>Disclaimer:</strong> This calculator is an educational and simulation tool. The results are
-                based on projections and assumptions that may not materialize. The cryptocurrency market is volatile and
-                risky. This is not investment advice. Consult a financial professional.
+            <p class="text-xs text-gray-500">
+                <strong data-lang-key="legalDisclaimerTitle">Disclaimer:</strong>
+                <span data-lang-key="legalDisclaimer">This calculator is an educational and simulation tool. The results
+                    are based on projections and assumptions that may not materialize. The cryptocurrency market is
+                    volatile and risky. This is not investment advice. Consult a financial professional.</span>
             </p>
         </div>
 
@@ -279,6 +280,7 @@
         let historicalBtcGrowth = {};
         let exchangeRates = {};
         let currentLanguage = 'en';
+        let lastCalculationData = null; // To store data for re-rendering on language change
         const supportedCurrencies = { "BRL": "R$", "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$" };
         const translations = {
             en: {
@@ -312,7 +314,9 @@
                 historyUnavailable: "History unavailable",
                 manual: "Manual",
                 yearsSuffix: "years",
-                developedBy: "Developed by"
+                developedBy: "Developed by",
+                legalDisclaimerTitle: "Disclaimer:",
+                legalDisclaimer: "This calculator is an educational and simulation tool. The results are based on projections and assumptions that may not materialize. The cryptocurrency market is volatile and risky. This is not investment advice. Consult a financial professional."
             },
             pt: {
                 mainTitle: "Calculadora de Aposentadoria com Bitcoin",
@@ -345,7 +349,9 @@
                 historyUnavailable: "Histórico indisponível",
                 manual: "Manual",
                 yearsSuffix: "anos",
-                developedBy: "Desenvolvido por"
+                developedBy: "Desenvolvido por",
+                legalDisclaimerTitle: "Aviso Legal:",
+                legalDisclaimer: "Esta calculadora é uma ferramenta educacional e de simulação. Os resultados são baseados em projeções e premissas que podem não se concretizar. O mercado de criptomoedas é volátil e arriscado. Isso não é uma recomendação de investimento. Consulte um profissional financeiro."
             }
         };
 
@@ -365,15 +371,12 @@
         function renderLanguage(lang) {
             currentLanguage = lang;
             document.documentElement.lang = lang;
-            // Update buttons
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.lang === lang);
             });
-            // Update all static text
             document.querySelectorAll('[data-lang-key]').forEach(el => {
                 const key = el.dataset.langKey;
                 if (translations[lang][key]) {
-                    // Handle special cases like the target age placeholder
                     if (key === 'yourGoal') {
                         const age = document.getElementById('life-expectancy').value;
                         el.textContent = translations[lang][key].replace('{age}', age);
@@ -382,7 +385,10 @@
                     }
                 }
             });
-            handleCurrencyChange(); // Update labels that depend on currency
+            handleCurrencyChange();
+            if (lastCalculationData && !resultsDiv.classList.contains('hidden')) {
+                displayResults(lastCalculationData);
+            }
         }
 
 
@@ -583,13 +589,15 @@
 
             const longevity = calculateLongevity(totalProjectedFiat, annualSpendingAtRetirement, retirementAge, btcGrowthRate, inflationRate);
 
-            displayResults({
+            const displayData = {
                 targetFiatAmount, totalProjectedFiat,
                 totalProjectedBtc: totalProjectedFiat > 0 ? totalProjectedFiat / projectedBtcPriceInSelectedCurrency : 0,
                 fiatGap, idealSingleInvestmentFiat, idealMonthlyInvestmentFiat,
                 currentBtcPriceInSelectedCurrency, selectedCurrency,
                 longevity, lifeExpectancy
-            });
+            };
+            lastCalculationData = displayData;
+            displayResults(displayData);
             resetButton();
         }
 
