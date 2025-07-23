@@ -230,13 +230,36 @@
 
         <!-- Footer with Credits -->
         <footer class="text-center mt-6 pt-4 border-t border-gray-700/50">
-            <p class="text-xs text-gray-500">
+            <p class="text-xs text-gray-500 flex items-center justify-center space-x-2">
                 <span data-lang-key="developedBy">Developed by</span>
                 <a href="https://github.com/AaronLil" target="_blank" rel="noopener noreferrer"
                     class="text-blue-400 hover:text-blue-300">Aaron Lil</a>
+                <span>&bull;</span>
+                <button id="donate-btn" data-lang-key="donate"
+                    class="text-blue-400 hover:text-blue-300 font-semibold">Buy me a coffee in BTC</button>
             </p>
         </footer>
 
+    </div>
+
+    <!-- Donation Modal -->
+    <div id="donate-modal"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-sm text-center border border-gray-700 relative">
+            <button id="close-modal-btn" class="absolute top-2 right-2 text-gray-500 hover:text-white">&times;</button>
+            <h3 data-lang-key="donateTitle" class="text-lg font-bold text-white mb-2">Buy me a coffee in BTC</h3>
+            <p data-lang-key="donateSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the address
+                below to send some sats.</p>
+            <div class="bg-white p-2 rounded-lg inline-block">
+                <img id="qr-code" src="" alt="Bitcoin QR Code">
+            </div>
+            <div class="mt-4 bg-gray-900 p-2 rounded-lg flex items-center justify-between">
+                <input id="btc-address" type="text" class="bg-transparent text-xs text-gray-300 w-full outline-none"
+                    readonly>
+                <button id="copy-address-btn" data-lang-key="copy"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-md">Copy</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -274,6 +297,14 @@
         const idealSingleInvestmentEl = document.getElementById('ideal-single-investment');
         const btcPriceDisplayEl = document.getElementById('btc-price-display');
 
+        // Donation Modal Elements
+        const donateModal = document.getElementById('donate-modal');
+        const donateBtn = document.getElementById('donate-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const qrCodeImg = document.getElementById('qr-code');
+        const btcAddressInput = document.getElementById('btc-address');
+        const copyAddressBtn = document.getElementById('copy-address-btn');
+
 
         // --- Data Storage, Config & Language ---
         let historicalIpca = {};
@@ -282,6 +313,8 @@
         let currentLanguage = 'en';
         let lastCalculationData = null; // To store data for re-rendering on language change
         const supportedCurrencies = { "BRL": "R$", "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$" };
+        const btcDonationAddress = "bc1qavu04gj53jrjwu537zdx2zz3ggycsmlv0wglhn";
+
         const translations = {
             en: {
                 mainTitle: "Bitcoin Retirement Calculator",
@@ -315,6 +348,11 @@
                 manual: "Manual",
                 yearsSuffix: "years",
                 developedBy: "Developed by",
+                donate: "Buy me a coffee in BTC",
+                donateTitle: "Buy me a coffee in BTC",
+                donateSubtitle: "Scan the QR code or copy the address below to send some sats.",
+                copy: "Copy",
+                copied: "Copied!",
                 legalDisclaimerTitle: "Disclaimer:",
                 legalDisclaimer: "This calculator is an educational and simulation tool. The results are based on projections and assumptions that may not materialize. The cryptocurrency market is volatile and risky. This is not investment advice. Consult a financial professional."
             },
@@ -350,6 +388,11 @@
                 manual: "Manual",
                 yearsSuffix: "anos",
                 developedBy: "Desenvolvido por",
+                donate: "Pague um café em BTC",
+                donateTitle: "Pague um café em BTC",
+                donateSubtitle: "Escaneie o QR code ou copie o endereço abaixo para enviar alguns satoshis.",
+                copy: "Copiar",
+                copied: "Copiado!",
                 legalDisclaimerTitle: "Aviso Legal:",
                 legalDisclaimer: "Esta calculadora é uma ferramenta educacional e de simulação. Os resultados são baseados em projeções e premissas que podem não se concretizar. O mercado de criptomoedas é volátil e arriscado. Isso não é uma recomendação de investimento. Consulte um profissional financeiro."
             }
@@ -682,6 +725,27 @@
                     btcGrowthRateInput.value = growthValue;
                     btcGrowthRateInput.readOnly = true;
                 }
+            });
+
+            // --- Donation Modal Logic ---
+            donateBtn.addEventListener('click', () => {
+                btcAddressInput.value = btcDonationAddress;
+                qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bitcoin:${btcDonationAddress}`;
+                donateModal.classList.remove('hidden');
+            });
+            closeModalBtn.addEventListener('click', () => donateModal.classList.add('hidden'));
+            donateModal.addEventListener('click', (e) => {
+                if (e.target === donateModal) {
+                    donateModal.classList.add('hidden');
+                }
+            });
+            copyAddressBtn.addEventListener('click', () => {
+                btcAddressInput.select();
+                document.execCommand('copy');
+                copyAddressBtn.textContent = translations[currentLanguage].copied;
+                setTimeout(() => {
+                    copyAddressBtn.textContent = translations[currentLanguage].copy;
+                }, 1500);
             });
 
             historicalDataLoader.classList.add('hidden');
