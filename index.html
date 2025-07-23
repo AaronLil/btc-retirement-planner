@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Retirement Calculator</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%23f7931a'/><path d='M23.189 14.02c.314-2.096-1.283-3.223-3.465-3.975l.708-2.84-1.728-.43-.69 2.765c-.454-.114-.92-.22-1.385-.326l.695-2.783L15.596 6l-.708 2.839c-.376-.086-.746-.17-1.104-.26l.002-.009-2.384-.595-.46 1.846s1.283.294 1.256.312c.7.175.826.638.805 1.006l-.806 3.235c.048.012.11.03.18.057l-.183-.045-1.13 4.532c-.086.212-.303.531-.793.41.018.025-1.256-.313-1.256-.313l-.858 1.978 2.25.561c.418.105.828.215 1.231.318l-.715 2.872 1.727.43.708-2.84c.472.127.93.245 1.378.357l-.706 2.828 1.728.43.715-2.866c2.948.558 5.164.333 6.097-2.333.752-2.146-.037-3.385-1.588-4.192 1.13-.26 1.98-1.003 2.207-2.538zm-3.95 5.538c-.533 2.147-4.148.986-5.32.695l.95-3.805c1.172.293 4.929.872 4.37 3.11zm.535-5.569c-.487 1.953-3.495.96-4.47.717l.86-3.45c.975.243 4.118.696 3.61 2.733z' fill='white'/></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        .mini-loader {
+            width: 16px;
+            height: 16px;
+            border-width: 2px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .lang-btn.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Language Switcher -->
+    <div id="lang-switcher" class="fixed top-4 right-4 z-10 flex space-x-1 bg-gray-700 rounded-lg p-1">
+        <button data-lang="en" class="lang-btn px-3 py-1 text-sm font-bold rounded-md transition active">EN</button>
+        <button data-lang="pt" class="lang-btn px-3 py-1 text-sm font-bold rounded-md transition">PT</button>
+    </div>
+
+    <div class="w-full max-w-3xl bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-700">
+
+        <div class="text-center mb-8">
+            <h1 data-lang-key="mainTitle" class="text-3xl sm:text-4xl font-bold text-white">Bitcoin Retirement
+                Calculator</h1>
+            <p data-lang-key="subtitle" class="text-gray-400 mt-2">Plan your financial future based on Bitcoin
+                projections.</p>
+        </div>
+
+        <form id="retirement-form" class="space-y-6">
+            <!-- Inputs Principais -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                <div>
+                    <label for="current-age" data-lang-key="currentAge"
+                        class="block text-sm font-medium text-gray-300 mb-2">Your current age</label>
+                    <input type="number" id="current-age" value="30"
+                        class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                <div>
+                    <label for="retirement-age" data-lang-key="retirementAge"
+                        class="block text-sm font-medium text-gray-300 mb-2">Retirement age</label>
+                    <input type="number" id="retirement-age" value="60"
+                        class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="monthly-spending" id="monthly-spending-label" data-lang-key="monthlySpending"
+                        class="block text-sm font-medium text-gray-300 mb-2">Desired monthly spending</label>
+                    <div class="flex space-x-2">
+                        <input type="text" inputmode="decimal" id="monthly-spending" value="10000"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <select id="currency-select"
+                            class="bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Novos Inputs de Planejamento -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end pt-4 border-t border-gray-700/50">
+                <div>
+                    <label for="current-btc" data-lang-key="currentBtc"
+                        class="block text-sm font-medium text-gray-300 mb-2">Current BTC holdings</label>
+                    <input type="text" inputmode="decimal" id="current-btc" value="0"
+                        class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+                <div>
+                    <label for="monthly-investment" id="monthly-investment-label" data-lang-key="monthlyInvestment"
+                        class="block text-sm font-medium text-gray-300 mb-2">Monthly investment</label>
+                    <input type="text" inputmode="decimal" id="monthly-investment" value="500"
+                        class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                </div>
+            </div>
+
+            <!-- Configurações Avançadas -->
+            <details class="bg-gray-900/50 p-4 rounded-lg">
+                <summary data-lang-key="advancedSettings"
+                    class="cursor-pointer font-medium text-gray-300 hover:text-white transition">Advanced Settings
+                    (Projection)</summary>
+                <div id="historical-data-loader" class="flex items-center text-sm text-gray-400 mt-4">
+                    <div class="loader mini-loader mr-2"></div>
+                    <span data-lang-key="loadingHistory">Loading historical data...</span>
+                </div>
+                <div id="advanced-settings-grid" class="hidden mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                    <!-- Inflação -->
+                    <div>
+                        <label for="inflation-rate" id="inflation-label" data-lang-key="annualInflation"
+                            class="block text-sm font-medium text-gray-400 mb-2">Annual Inflation (%)</label>
+                        <div class="flex space-x-2">
+                            <input type="number" id="inflation-rate" value="3" step="0.1"
+                                class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <select id="inflation-year-select"
+                                class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></select>
+                        </div>
+                    </div>
+                    <!-- Crescimento BTC -->
+                    <div>
+                        <label for="btc-growth-rate" data-lang-key="annualBtcGrowth"
+                            class="block text-sm font-medium text-gray-400 mb-2">Annual BTC Growth (%)</label>
+                        <div class="flex space-x-2">
+                            <input type="number" id="btc-growth-rate" value="25" step="1"
+                                class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <select id="btc-year-select"
+                                class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></select>
+                        </div>
+                    </div>
+                    <!-- Expectativa de Vida -->
+                    <div>
+                        <label for="life-expectancy" data-lang-key="lifeExpectancy"
+                            class="block text-sm font-medium text-gray-400 mb-2">Life Expectancy (years)</label>
+                        <input type="number" id="life-expectancy" value="90" step="1"
+                            class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                </div>
+                <p data-lang-key="disclaimerAdvanced" class="text-xs text-gray-500 mt-4">These values are assumptions
+                    for the calculation. The growth of Bitcoin is highly speculative.</p>
+            </details>
+
+            <button type="submit" id="calculate-btn" data-lang-key="calculate"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/50">
+                Calculate
+            </button>
+        </form>
+
+        <!-- Resultados -->
+        <div id="results" class="mt-8 hidden">
+            <div class="bg-gray-900/50 p-6 rounded-lg">
+                <h2 data-lang-key="resultsTitle" class="text-xl font-bold text-white mb-4 text-center">Your Plan's
+                    Results</h2>
+                <div class="space-y-4">
+                    <!-- Meta -->
+                    <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
+                        <span id="target-label" data-lang-key="yourGoal">Your Goal (Capital to last until age <span
+                                id="target-age-display">90</span>)</span>
+                        <span id="target-fiat" class="font-bold text-lg text-white">--</span>
+                    </div>
+                    <!-- Projeção -->
+                    <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
+                        <span data-lang-key="yourProjection" class="text-gray-300">Your Plan's Projection</span>
+                        <div class="text-right">
+                            <span id="projected-fiat" class="font-bold text-lg text-white block">--</span>
+                            <span id="projected-btc" class="text-sm text-gray-400">-- BTC</span>
+                        </div>
+                    </div>
+                    <!-- Duração da Reserva -->
+                    <div class="flex justify-between items-center bg-gray-800 p-3 rounded-lg">
+                        <span data-lang-key="reserveLongevity" class="text-gray-300">Your reserve should last until
+                            age</span>
+                        <span id="longevity-age" class="font-bold text-lg text-white">--</span>
+                    </div>
+                    <!-- Resultado Final -->
+                    <div id="gap-result" class="flex justify-between items-center p-4 rounded-lg">
+                        <span id="gap-label" class="font-bold">--</span>
+                        <span id="gap-fiat" class="font-bold text-xl">--</span>
+                    </div>
+                    <!-- Estratégias para Atingir a Meta -->
+                    <div id="strategies-wrapper" class="hidden pt-4 border-t border-gray-500/30 space-y-4">
+                        <h3 data-lang-key="strategiesTitle" class="text-center font-semibold text-gray-300">Strategies
+                            to Reach Your Goal:</h3>
+                        <div class="text-center bg-gray-800 p-3 rounded-lg">
+                            <span data-lang-key="idealMonthly" class="text-sm text-gray-400 block">Ideal Monthly
+                                Investment</span>
+                            <strong id="ideal-monthly-investment" class="text-blue-400 text-2xl block">--</strong>
+                        </div>
+                        <div data-lang-key="or" class="text-center text-gray-500 text-sm">OR</div>
+                        <div class="text-center bg-gray-800 p-3 rounded-lg">
+                            <span data-lang-key="idealSingle" class="text-sm text-gray-400 block">Ideal Single
+                                Investment (today)</span>
+                            <strong id="ideal-single-investment" class="text-blue-400 text-2xl block">--</strong>
+                        </div>
+                    </div>
+                    <p class="text-xs text-center mt-2 text-gray-500"><span data-lang-key="basedOn">Based on BTC
+                            at</span> <span id="btc-price-display"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="loader" class="hidden mt-8 flex flex-col items-center justify-center">
+            <div class="loader"></div>
+            <p id="loader-text" data-lang-key="loadingData" class="mt-4 text-gray-400">Fetching rates and calculating...
+            </p>
+        </div>
+        <div id="error" class="hidden mt-6 bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg text-center">
+        </div>
+
+        <div class="text-center mt-8">
+            <p data-lang-key="legalDisclaimer" class="text-xs text-gray-500">
+                <strong>Disclaimer:</strong> This calculator is an educational and simulation tool. The results are
+                based on projections and assumptions that may not materialize. The cryptocurrency market is volatile and
+                risky. This is not investment advice. Consult a financial professional.
+            </p>
+        </div>
+
+        <!-- Footer with Credits -->
+        <footer class="text-center mt-6 pt-4 border-t border-gray-700/50">
+            <p class="text-xs text-gray-500">
+                <span data-lang-key="developedBy">Developed by</span>
+                <a href="https://github.com/AaronLil" target="_blank" rel="noopener noreferrer"
+                    class="text-blue-400 hover:text-blue-300">Aaron Lil</a>
+            </p>
+        </footer>
+
+    </div>
+
+    <script type="module">
+        // --- DOM Elements ---
+        const form = document.getElementById('retirement-form');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultsDiv = document.getElementById('results');
+        const loader = document.getElementById('loader');
+        const errorDiv = document.getElementById('error');
+        const historicalDataLoader = document.getElementById('historical-data-loader');
+        const advancedSettingsGrid = document.getElementById('advanced-settings-grid');
+        const langSwitcher = document.getElementById('lang-switcher');
+
+        // Input fields
+        const currencySelect = document.getElementById('currency-select');
+        const monthlySpendingLabel = document.getElementById('monthly-spending-label');
+        const monthlyInvestmentLabel = document.getElementById('monthly-investment-label');
+        const inflationLabel = document.getElementById('inflation-label');
+        const inflationRateInput = document.getElementById('inflation-rate');
+        const inflationYearSelect = document.getElementById('inflation-year-select');
+        const btcGrowthRateInput = document.getElementById('btc-growth-rate');
+        const btcYearSelect = document.getElementById('btc-year-select');
+
+        // Result fields
+        const targetFiatEl = document.getElementById('target-fiat');
+        const targetAgeDisplayEl = document.getElementById('target-age-display');
+        const projectedFiatEl = document.getElementById('projected-fiat');
+        const projectedBtcEl = document.getElementById('projected-btc');
+        const longevityAgeEl = document.getElementById('longevity-age');
+        const gapResultEl = document.getElementById('gap-result');
+        const gapLabelEl = document.getElementById('gap-label');
+        const gapFiatEl = document.getElementById('gap-fiat');
+        const strategiesWrapperEl = document.getElementById('strategies-wrapper');
+        const idealMonthlyInvestmentEl = document.getElementById('ideal-monthly-investment');
+        const idealSingleInvestmentEl = document.getElementById('ideal-single-investment');
+        const btcPriceDisplayEl = document.getElementById('btc-price-display');
+
+
+        // --- Data Storage, Config & Language ---
+        let historicalIpca = {};
+        let historicalBtcGrowth = {};
+        let exchangeRates = {};
+        let currentLanguage = 'en';
+        const supportedCurrencies = { "BRL": "R$", "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$" };
+        const translations = {
+            en: {
+                mainTitle: "Bitcoin Retirement Calculator",
+                subtitle: "Plan your financial future based on Bitcoin projections.",
+                currentAge: "Your current age",
+                retirementAge: "Retirement age",
+                monthlySpending: "Desired monthly spending",
+                currentBtc: "Current BTC holdings",
+                monthlyInvestment: "Monthly investment",
+                advancedSettings: "Advanced Settings (Projection)",
+                loadingHistory: "Loading historical data...",
+                annualInflation: "Annual Inflation (%)",
+                annualBtcGrowth: "Annual BTC Growth (%)",
+                lifeExpectancy: "Life Expectancy (years)",
+                disclaimerAdvanced: "These values are assumptions for the calculation. The growth of Bitcoin is highly speculative.",
+                calculate: "Calculate",
+                resultsTitle: "Your Plan's Results",
+                yourGoal: "Your Goal (Capital to last until age {age})",
+                yourProjection: "Your Plan's Projection",
+                reserveLongevity: "Your reserve should last until age",
+                gapReached: "You've Reached the Goal (Surplus)",
+                gapMissing: "Shortfall to Goal",
+                strategiesTitle: "Strategies to Reach Your Goal:",
+                idealMonthly: "Ideal Monthly Investment",
+                or: "OR",
+                idealSingle: "Ideal Single Investment (today)",
+                basedOn: "Based on BTC at",
+                loadingData: "Fetching rates and calculating...",
+                validationError: "Invalid values. Please check the ages and amounts entered.",
+                historyUnavailable: "History unavailable",
+                manual: "Manual",
+                yearsSuffix: "years",
+                developedBy: "Developed by"
+            },
+            pt: {
+                mainTitle: "Calculadora de Aposentadoria com Bitcoin",
+                subtitle: "Planeje seu futuro financeiro com base em projeções do Bitcoin.",
+                currentAge: "Sua idade atual",
+                retirementAge: "Idade para se aposentar",
+                monthlySpending: "Gasto mensal desejado",
+                currentBtc: "BTC já investido",
+                monthlyInvestment: "Aporte mensal",
+                advancedSettings: "Configurações Avançadas (Projeção)",
+                loadingHistory: "Carregando dados históricos...",
+                annualInflation: "Inflação anual (%)",
+                annualBtcGrowth: "Cresc. anual do BTC (%)",
+                lifeExpectancy: "Expectativa de Vida (anos)",
+                disclaimerAdvanced: "Esses valores são suposições para o cálculo. O crescimento do Bitcoin é altamente especulativo.",
+                calculate: "Calcular",
+                resultsTitle: "Resultado do seu Plano",
+                yourGoal: "Sua Meta (Patrimônio para durar até os {age} anos)",
+                yourProjection: "Projeção do seu Plano",
+                reserveLongevity: "Sua reserva deve durar até os",
+                gapReached: "Você Atingiu a Meta (Sobra)",
+                gapMissing: "Faltam para a Meta",
+                strategiesTitle: "Estratégias para Atingir sua Meta:",
+                idealMonthly: "Aporte Mensal Ideal",
+                or: "OU",
+                idealSingle: "Aporte Único Ideal (hoje)",
+                basedOn: "Baseado no BTC a",
+                loadingData: "Buscando cotações e calculando...",
+                validationError: "Valores inválidos. Verifique as idades e os valores inseridos.",
+                historyUnavailable: "Histórico indisponível",
+                manual: "Manual",
+                yearsSuffix: "anos",
+                developedBy: "Desenvolvido por"
+            }
+        };
+
+        // --- Helper Functions ---
+        function parseSanitizedFloat(str) {
+            if (typeof str !== 'string' || !str) return 0;
+            let cleanStr = str.trim();
+            const usesCommaAsDecimal = cleanStr.includes(',') && (!cleanStr.includes('.') || cleanStr.lastIndexOf(',') > cleanStr.lastIndexOf('.'));
+            if (usesCommaAsDecimal) {
+                cleanStr = cleanStr.replace(/\./g, '').replace(',', '.');
+            } else {
+                cleanStr = cleanStr.replace(/,/g, '');
+            }
+            return parseFloat(cleanStr) || 0;
+        }
+
+        function renderLanguage(lang) {
+            currentLanguage = lang;
+            document.documentElement.lang = lang;
+            // Update buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === lang);
+            });
+            // Update all static text
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.dataset.langKey;
+                if (translations[lang][key]) {
+                    // Handle special cases like the target age placeholder
+                    if (key === 'yourGoal') {
+                        const age = document.getElementById('life-expectancy').value;
+                        el.textContent = translations[lang][key].replace('{age}', age);
+                    } else {
+                        el.textContent = translations[lang][key];
+                    }
+                }
+            });
+            handleCurrencyChange(); // Update labels that depend on currency
+        }
+
+
+        // --- API Fetching ---
+        async function fetchApiData() {
+            try {
+                const [btcResponse, ratesResponse] = await Promise.all([
+                    fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'),
+                    fetch('https://api.exchangerate-api.com/v4/latest/USD')
+                ]);
+                if (!btcResponse.ok || !ratesResponse.ok) throw new Error('Não foi possível obter as cotações atuais.');
+                const btcData = await btcResponse.json();
+                const ratesData = await ratesResponse.json();
+                exchangeRates = ratesData.rates;
+                return { btcPriceUSD: btcData.bitcoin.usd };
+            } catch (err) {
+                console.error("API Data Fetch Error:", err);
+                showError(err.message);
+                return null;
+            }
+        }
+
+        async function fetchIpcaHistory() {
+            try {
+                const response = await fetch('https://servicodados.ibge.gov.br/api/v3/agregados/1737/periodos/-180/variaveis/2265?localidades=N1[all]');
+                if (!response.ok) throw new Error('Falha ao buscar histórico do IPCA.');
+                const data = await response.json();
+                const series = data[0].resultados[0].series[0].serie;
+                Object.keys(series).forEach(period => {
+                    if (period.endsWith('12')) {
+                        const year = period.substring(0, 4);
+                        historicalIpca[year] = parseFloat(series[period]);
+                    }
+                });
+            } catch (error) {
+                console.error("IPCA History Fetch Error:", error);
+                inflationYearSelect.disabled = true;
+                inflationYearSelect.innerHTML = `<option>${translations[currentLanguage].historyUnavailable}</option>`;
+            }
+        }
+
+        async function fetchBtcHistory() {
+            try {
+                const response = await fetch('https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=2000');
+                if (!response.ok) throw new Error('Falha ao buscar histórico do Bitcoin.');
+                const data = await response.json();
+                if (data.Response !== 'Success' || !data.Data || !data.Data.Data) throw new Error('API de histórico do BTC retornou uma resposta inválida.');
+                const prices = data.Data.Data;
+                const firstPriceByYear = {};
+                prices.forEach(dayData => {
+                    const year = new Date(dayData.time * 1000).getUTCFullYear();
+                    if (!firstPriceByYear[year]) {
+                        firstPriceByYear[year] = dayData.close;
+                    }
+                });
+                const years = Object.keys(firstPriceByYear).sort();
+                for (let i = 1; i < years.length; i++) {
+                    const year = years[i];
+                    const prevYear = years[i - 1];
+                    const priceThisYear = firstPriceByYear[year];
+                    const pricePrevYear = firstPriceByYear[prevYear];
+                    if (pricePrevYear > 0) {
+                        const growth = ((priceThisYear / pricePrevYear) - 1) * 100;
+                        historicalBtcGrowth[year] = parseFloat(growth.toFixed(2));
+                    }
+                }
+            } catch (error) {
+                console.error("BTC History Fetch Error:", error.message);
+                btcYearSelect.disabled = true;
+                btcYearSelect.innerHTML = `<option>${translations[currentLanguage].historyUnavailable}</option>`;
+            }
+        }
+
+        // --- UI Population & Handlers ---
+        function populateSelect(selectElement, data) {
+            selectElement.innerHTML = `<option value="manual">${translations[currentLanguage].manual}</option>`;
+            const sortedYears = Object.keys(data).sort((a, b) => b - a);
+            sortedYears.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                selectElement.appendChild(option);
+            });
+        }
+
+        function handleCurrencyChange() {
+            const selectedCurrency = currencySelect.value;
+            monthlySpendingLabel.textContent = `${translations[currentLanguage].monthlySpending} (${selectedCurrency})`;
+            monthlyInvestmentLabel.textContent = `${translations[currentLanguage].monthlyInvestment} (${selectedCurrency})`;
+            if (selectedCurrency === 'BRL') {
+                inflationLabel.textContent = `${translations[currentLanguage].annualInflation.replace('(%)', '(IPCA %)')}`;
+                inflationYearSelect.disabled = false;
+            } else {
+                inflationLabel.textContent = translations[currentLanguage].annualInflation;
+                inflationYearSelect.value = 'manual';
+                inflationYearSelect.disabled = true;
+                inflationRateInput.readOnly = false;
+            }
+        }
+
+        // --- Core Calculation Functions ---
+        function calculateLongevity(startingCapital, firstYearWithdrawal, retirementAge, growthRate, inflationRate) {
+            let capital = startingCapital;
+            let annualWithdrawal = firstYearWithdrawal;
+            let age = retirementAge;
+            const maxAge = 120;
+            if (capital <= 0) return retirementAge;
+            while (age < maxAge) {
+                capital *= (1 + growthRate);
+                capital -= annualWithdrawal;
+                if (capital <= 0) return age + 1;
+                age++;
+                annualWithdrawal *= (1 + inflationRate);
+            }
+            return `${maxAge}+`;
+        }
+
+        function calculateTargetCapital(firstYearWithdrawal, retirementAge, lifeExpectancy, growthRate, inflationRate) {
+            let requiredCapital = 0;
+            for (let age = lifeExpectancy - 1; age >= retirementAge; age--) {
+                const yearsInRetirement = age - retirementAge;
+                const withdrawalForYear = firstYearWithdrawal * Math.pow(1 + inflationRate, yearsInRetirement);
+                requiredCapital = (requiredCapital + withdrawalForYear) / (1 + growthRate);
+            }
+            return requiredCapital;
+        }
+
+        // --- Main Calculation Handler ---
+        async function handleCalculation(event) {
+            event.preventDefault();
+            resultsDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            loader.classList.remove('hidden');
+            calculateBtn.disabled = true;
+            calculateBtn.textContent = translations[currentLanguage].loadingData.split(' ')[0] + '...';
+
+            const apiData = await fetchApiData();
+            if (!apiData) { resetButton(); return; }
+
+            const { btcPriceUSD } = apiData;
+            const selectedCurrency = currencySelect.value;
+            const exchangeRate = exchangeRates[selectedCurrency] || 1;
+            const currentBtcPriceInSelectedCurrency = btcPriceUSD * exchangeRate;
+
+            const currentAge = parseInt(document.getElementById('current-age').value);
+            const retirementAge = parseInt(document.getElementById('retirement-age').value);
+            const lifeExpectancy = parseInt(document.getElementById('life-expectancy').value);
+            const monthlySpending = parseSanitizedFloat(document.getElementById('monthly-spending').value);
+            const currentBtc = parseSanitizedFloat(document.getElementById('current-btc').value);
+            const monthlyInvestment = parseSanitizedFloat(document.getElementById('monthly-investment').value);
+            const inflationRate = parseFloat(inflationRateInput.value) / 100;
+            const btcGrowthRate = parseFloat(btcGrowthRateInput.value) / 100;
+
+            if (isNaN(currentAge) || isNaN(retirementAge) || isNaN(monthlySpending) || retirementAge <= currentAge || lifeExpectancy <= retirementAge) {
+                showError(translations[currentLanguage].validationError);
+                resetButton(); return;
+            }
+
+            const yearsToRetirement = retirementAge - currentAge;
+            const annualSpendingAtRetirement = (monthlySpending * 12) * Math.pow((1 + inflationRate), yearsToRetirement);
+
+            const targetFiatAmount = calculateTargetCapital(annualSpendingAtRetirement, retirementAge, lifeExpectancy, btcGrowthRate, inflationRate);
+
+            const projectedBtcPriceInSelectedCurrency = currentBtcPriceInSelectedCurrency * Math.pow((1 + btcGrowthRate), yearsToRetirement);
+            const futureValueOfCurrentBtc = currentBtc * projectedBtcPriceInSelectedCurrency;
+
+            let futureValueOfCurrentAnnuityFiat = 0;
+            if (monthlyInvestment > 0 && btcGrowthRate >= 0) {
+                const monthlyRate = Math.pow(1 + btcGrowthRate, 1 / 12) - 1;
+                const numMonths = yearsToRetirement * 12;
+                if (monthlyRate > 0) {
+                    futureValueOfCurrentAnnuityFiat = monthlyInvestment * ((Math.pow(1 + monthlyRate, numMonths) - 1) / monthlyRate);
+                } else {
+                    futureValueOfCurrentAnnuityFiat = monthlyInvestment * numMonths;
+                }
+            }
+
+            const totalProjectedFiat = futureValueOfCurrentBtc + futureValueOfCurrentAnnuityFiat;
+            const fiatGap = targetFiatAmount - totalProjectedFiat;
+
+            let idealMonthlyInvestmentFiat = 0;
+            let idealSingleInvestmentFiat = 0;
+            const gapToFillFromContributions = targetFiatAmount - futureValueOfCurrentBtc;
+            if (gapToFillFromContributions > 0) {
+                idealSingleInvestmentFiat = gapToFillFromContributions / Math.pow(1 + btcGrowthRate, yearsToRetirement);
+                if (btcGrowthRate >= 0) {
+                    const monthlyRate = Math.pow(1 + btcGrowthRate, 1 / 12) - 1;
+                    const numMonths = yearsToRetirement * 12;
+                    if (monthlyRate > 0) {
+                        const fvFactor = (Math.pow(1 + monthlyRate, numMonths) - 1) / monthlyRate;
+                        idealMonthlyInvestmentFiat = gapToFillFromContributions / fvFactor;
+                    } else {
+                        idealMonthlyInvestmentFiat = gapToFillFromContributions / numMonths;
+                    }
+                }
+            }
+            idealMonthlyInvestmentFiat = Math.ceil(idealMonthlyInvestmentFiat * 100) / 100;
+
+            const longevity = calculateLongevity(totalProjectedFiat, annualSpendingAtRetirement, retirementAge, btcGrowthRate, inflationRate);
+
+            displayResults({
+                targetFiatAmount, totalProjectedFiat,
+                totalProjectedBtc: totalProjectedFiat > 0 ? totalProjectedFiat / projectedBtcPriceInSelectedCurrency : 0,
+                fiatGap, idealSingleInvestmentFiat, idealMonthlyInvestmentFiat,
+                currentBtcPriceInSelectedCurrency, selectedCurrency,
+                longevity, lifeExpectancy
+            });
+            resetButton();
+        }
+
+        // --- UI Helpers ---
+        function displayResults(data) {
+            const formatCurrency = (value) => value.toLocaleString(currentLanguage, { style: 'currency', currency: data.selectedCurrency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            targetAgeDisplayEl.textContent = data.lifeExpectancy;
+            document.getElementById('target-label').textContent = translations[currentLanguage].yourGoal.replace('{age}', data.lifeExpectancy);
+            targetFiatEl.textContent = formatCurrency(data.targetFiatAmount);
+            projectedFiatEl.textContent = formatCurrency(data.totalProjectedFiat);
+            projectedBtcEl.textContent = `~ ${data.totalProjectedBtc.toFixed(4)} BTC`;
+            longevityAgeEl.textContent = `${data.longevity} ${data.longevity.toString().includes('+') ? '' : translations[currentLanguage].yearsSuffix}`;
+            gapFiatEl.textContent = formatCurrency(Math.abs(data.fiatGap));
+
+            if (data.fiatGap <= 0.01) {
+                gapLabelEl.textContent = translations[currentLanguage].gapReached;
+                gapResultEl.classList.remove('bg-red-500/20', 'text-red-300');
+                gapResultEl.classList.add('bg-green-500/20', 'text-green-300');
+                strategiesWrapperEl.classList.add('hidden');
+            } else {
+                gapLabelEl.textContent = translations[currentLanguage].gapMissing;
+                gapResultEl.classList.remove('bg-green-500/20', 'text-green-300');
+                gapResultEl.classList.add('bg-red-500/20', 'text-red-300');
+                strategiesWrapperEl.classList.remove('hidden');
+                idealMonthlyInvestmentEl.textContent = formatCurrency(data.idealMonthlyInvestmentFiat);
+                idealSingleInvestmentEl.textContent = formatCurrency(data.idealSingleInvestmentFiat);
+            }
+
+            btcPriceDisplayEl.textContent = formatCurrency(data.currentBtcPriceInSelectedCurrency);
+            loader.classList.add('hidden');
+            resultsDiv.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            loader.classList.add('hidden');
+        }
+
+        function resetButton() {
+            calculateBtn.disabled = false;
+            calculateBtn.textContent = translations[currentLanguage].calculate;
+        }
+
+        // --- Initialization ---
+        async function initialize() {
+            Object.keys(supportedCurrencies).forEach(currency => {
+                const option = document.createElement('option');
+                option.value = currency;
+                option.textContent = currency;
+                currencySelect.appendChild(option);
+            });
+            currencySelect.value = 'BRL';
+
+            await Promise.all([fetchIpcaHistory(), fetchBtcHistory()]);
+
+            populateSelect(inflationYearSelect, historicalIpca);
+            populateSelect(btcYearSelect, historicalBtcGrowth);
+
+            currencySelect.addEventListener('change', handleCurrencyChange);
+            langSwitcher.addEventListener('click', (e) => {
+                if (e.target.dataset.lang) {
+                    renderLanguage(e.target.dataset.lang);
+                }
+            });
+
+            inflationYearSelect.addEventListener('change', () => {
+                const year = inflationYearSelect.value;
+                if (year === 'manual') { inflationRateInput.readOnly = false; }
+                else {
+                    inflationRateInput.value = historicalIpca[year];
+                    inflationRateInput.readOnly = true;
+                }
+            });
+
+            btcYearSelect.addEventListener('change', () => {
+                const year = btcYearSelect.value;
+                if (year === 'manual') { btcGrowthRateInput.readOnly = false; }
+                else {
+                    const growthValue = historicalBtcGrowth[year];
+                    btcGrowthRateInput.value = growthValue;
+                    btcGrowthRateInput.readOnly = true;
+                }
+            });
+
+            historicalDataLoader.classList.add('hidden');
+            advancedSettingsGrid.classList.remove('hidden');
+            renderLanguage(currentLanguage); // Initial render
+        }
+
+        form.addEventListener('submit', handleCalculation);
+        initialize();
+    </script>
+</body>
+
+</html>
