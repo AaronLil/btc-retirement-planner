@@ -246,18 +246,50 @@
     <div id="donate-modal"
         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-sm text-center border border-gray-700 relative">
-            <button id="close-modal-btn" class="absolute top-2 right-2 text-gray-500 hover:text-white">&times;</button>
-            <h3 data-lang-key="donateTitle" class="text-lg font-bold text-white mb-2">Buy me a coffee in BTC</h3>
-            <p data-lang-key="donateSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the address
-                below to send some sats.</p>
-            <div class="bg-white p-2 rounded-lg inline-block">
-                <img id="qr-code" src="" alt="Bitcoin QR Code">
+            <button id="close-modal-btn"
+                class="absolute top-2 right-2 text-gray-500 hover:text-white text-xl">&times;</button>
+            <h3 data-lang-key="donateTitle" class="text-lg font-bold text-white mb-4">Buy me a coffee in BTC or ETH</h3>
+
+            <!-- Tabs -->
+            <div class="flex bg-gray-700 rounded-lg p-1 mb-4">
+                <button id="btc-tab"
+                    class="flex-1 py-2 px-4 text-sm font-medium rounded-md transition bg-blue-600 text-white">
+                    Bitcoin
+                </button>
+                <button id="eth-tab"
+                    class="flex-1 py-2 px-4 text-sm font-medium rounded-md transition text-gray-300 hover:text-white">
+                    ETH (Base)
+                </button>
             </div>
-            <div class="mt-4 bg-gray-900 p-2 rounded-lg flex items-center justify-between">
-                <input id="btc-address" type="text" class="bg-transparent text-xs text-gray-300 w-full outline-none"
-                    readonly>
-                <button id="copy-address-btn" data-lang-key="copy"
-                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-md">Copy</button>
+
+            <!-- BTC Content -->
+            <div id="btc-content" class="tab-content">
+                <p data-lang-key="btcSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the Bitcoin
+                    address below to send some sats.</p>
+                <div class="bg-white p-2 rounded-lg inline-block mb-3">
+                    <img id="qr-code" src="" alt="Bitcoin QR Code">
+                </div>
+                <div class="bg-gray-900 p-2 rounded-lg flex items-center justify-between">
+                    <input id="btc-address" type="text"
+                        class="bg-transparent text-xs text-gray-300 w-full outline-none mr-2" readonly>
+                    <button id="copy-address-btn" data-lang-key="copy"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-md whitespace-nowrap">Copy</button>
+                </div>
+            </div>
+
+            <!-- ETH Content -->
+            <div id="eth-content" class="tab-content hidden">
+                <p data-lang-key="ethSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the address
+                    below to send ETH via Base network (low fees).</p>
+                <div class="bg-white p-2 rounded-lg inline-block mb-3">
+                    <img id="base-qr-code" src="" alt="Base ETH QR Code">
+                </div>
+                <div class="bg-gray-900 p-2 rounded-lg flex items-center justify-between">
+                    <input id="base-address" type="text"
+                        class="bg-transparent text-xs text-gray-300 w-full outline-none mr-2" readonly>
+                    <button id="copy-base-btn" data-lang-key="copy"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-md whitespace-nowrap">Copy</button>
+                </div>
             </div>
         </div>
     </div>
@@ -301,19 +333,27 @@
         const donateModal = document.getElementById('donate-modal');
         const donateBtn = document.getElementById('donate-btn');
         const closeModalBtn = document.getElementById('close-modal-btn');
+        const btcTab = document.getElementById('btc-tab');
+        const ethTab = document.getElementById('eth-tab');
+        const btcContent = document.getElementById('btc-content');
+        const ethContent = document.getElementById('eth-content');
         const qrCodeImg = document.getElementById('qr-code');
         const btcAddressInput = document.getElementById('btc-address');
         const copyAddressBtn = document.getElementById('copy-address-btn');
+        const baseQrCodeImg = document.getElementById('base-qr-code');
+        const baseAddressInput = document.getElementById('base-address');
+        const copyBaseBtn = document.getElementById('copy-base-btn');
 
 
         // --- Data Storage, Config & Language ---
         let historicalIpca = {};
         let historicalBtcGrowth = {};
         let exchangeRates = {};
-        let currentLanguage = 'en';
+        let currentLanguage = 'pt';
         let lastCalculationData = null; // To store data for re-rendering on language change
         const supportedCurrencies = { "BRL": "R$", "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$" };
         const btcDonationAddress = "bc1qavu04gj53jrjwu537zdx2zz3ggycsmlv0wglhn";
+        const baseDonationAddress = "0x80072033f3425ee84599c9230a62c7ffb2b33188";
 
         const translations = {
             en: {
@@ -348,9 +388,11 @@
                 manual: "Manual",
                 yearsSuffix: "years",
                 developedBy: "Developed by",
-                donate: "Buy me a coffee in BTC",
-                donateTitle: "Buy me a coffee in BTC",
-                donateSubtitle: "Scan the QR code or copy the address below to send some sats.",
+                donate: "Buy me a coffee in BTC or ETH",
+                donateTitle: "Buy me a coffee in BTC or ETH",
+                donateSubtitle: "Choose your preferred network below to send a donation.",
+                btcSubtitle: "Scan the QR code or copy the Bitcoin address below to send some sats.",
+                ethSubtitle: "Scan the QR code or copy the address below to send ETH via Base network (low fees).",
                 copy: "Copy",
                 copied: "Copied!",
                 legalDisclaimerTitle: "Disclaimer:",
@@ -388,9 +430,11 @@
                 manual: "Manual",
                 yearsSuffix: "anos",
                 developedBy: "Desenvolvido por",
-                donate: "Pague um café em BTC",
-                donateTitle: "Pague um café em BTC",
-                donateSubtitle: "Escaneie o QR code ou copie o endereço abaixo para enviar alguns satoshis.",
+                donate: "Me compre um café em BTC ou ETH",
+                donateTitle: "Me compre um café em BTC ou ETH",
+                donateSubtitle: "Escolha sua rede preferida abaixo para enviar uma doação.",
+                btcSubtitle: "Escaneie o QR code ou copie o endereço Bitcoin abaixo para enviar alguns satoshis.",
+                ethSubtitle: "Escaneie o QR code ou copie o endereço abaixo para enviar ETH via rede Base (taxas baixas).",
                 copy: "Copiar",
                 copied: "Copiado!",
                 legalDisclaimerTitle: "Aviso Legal:",
@@ -728,23 +772,60 @@
             });
 
             // --- Donation Modal Logic ---
+
+            // Tab switching logic
+            function switchTab(activeTab, activeContent, inactiveTab, inactiveContent) {
+                activeTab.classList.add('bg-blue-600', 'text-white');
+                activeTab.classList.remove('text-gray-300');
+                inactiveTab.classList.remove('bg-blue-600', 'text-white');
+                inactiveTab.classList.add('text-gray-300');
+                activeContent.classList.remove('hidden');
+                inactiveContent.classList.add('hidden');
+            }
+
+            btcTab.addEventListener('click', () => {
+                switchTab(btcTab, btcContent, ethTab, ethContent);
+            });
+
+            ethTab.addEventListener('click', () => {
+                switchTab(ethTab, ethContent, btcTab, btcContent);
+            });
+
             donateBtn.addEventListener('click', () => {
+                // Load both QR codes when modal opens
                 btcAddressInput.value = btcDonationAddress;
-                qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=bitcoin:${btcDonationAddress}`;
+                qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${btcDonationAddress}`;
+                // ETH na Base (chain_id=8453)
+                baseAddressInput.value = baseDonationAddress;
+                baseQrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${baseDonationAddress}`;
+
+                // Reset to BTC tab by default
+                switchTab(btcTab, btcContent, ethTab, ethContent);
                 donateModal.classList.remove('hidden');
             });
+
             closeModalBtn.addEventListener('click', () => donateModal.classList.add('hidden'));
             donateModal.addEventListener('click', (e) => {
                 if (e.target === donateModal) {
                     donateModal.classList.add('hidden');
                 }
             });
+
             copyAddressBtn.addEventListener('click', () => {
                 btcAddressInput.select();
                 document.execCommand('copy');
                 copyAddressBtn.textContent = translations[currentLanguage].copied;
                 setTimeout(() => {
                     copyAddressBtn.textContent = translations[currentLanguage].copy;
+                }, 1500);
+            });
+
+            copyBaseBtn.addEventListener('click', () => {
+                baseAddressInput.select();
+                document.execCommand('copy');
+                copyBaseBtn.textContent = translations[currentLanguage].copied;
+                setTimeout(() => {
+                    copyBaseBtn.textContent = translations[currentLanguage].copy;
                 }, 1500);
             });
 
