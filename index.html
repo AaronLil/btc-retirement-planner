@@ -2,7 +2,17 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"> <!-- Language Tip Tooltip -->
+    <div id="lang-tip"
+        class="fixed top-20 right-6 z-20 bg-blue-600 text-white text-sm px-4 py-3 rounded-lg shadow-xl opacity-0 transition-all duration-500 pointer-events-none max-w-xs floating">
+        <div class="flex items-center space-x-2">
+            <span class="text-base">🟢</span>
+            <span class="font-medium">Disponível em Português!</span>
+        </div>
+        <div
+            class="absolute -top-2 right-6 w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-blue-600">
+        </div>
+    </div>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bitcoin Retirement Calculator</title>
     <link rel="icon"
@@ -45,6 +55,22 @@
             background-color: #4f46e5;
             color: white;
         }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        .floating {
+            animation: float 2s ease-in-out infinite;
+        }
     </style>
 </head>
 
@@ -54,6 +80,18 @@
     <div id="lang-switcher" class="fixed top-4 right-4 z-10 flex space-x-1 bg-gray-700 rounded-lg p-1">
         <button data-lang="en" class="lang-btn px-3 py-1 text-sm font-bold rounded-md transition active">EN</button>
         <button data-lang="pt" class="lang-btn px-3 py-1 text-sm font-bold rounded-md transition">PT</button>
+    </div>
+
+    <!-- Language Tip Tooltip -->
+    <div id="lang-tip"
+        class="fixed top-16 right-4 z-20 bg-blue-600 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-500 pointer-events-none">
+        <div class="flex items-center space-x-2">
+            <span>�🇷</span>
+            <span>Disponível em Português!</span>
+        </div>
+        <div
+            class="absolute -top-1 right-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-blue-600">
+        </div>
     </div>
 
     <div class="w-full max-w-3xl bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-700">
@@ -349,7 +387,7 @@
         let historicalIpca = {};
         let historicalBtcGrowth = {};
         let exchangeRates = {};
-        let currentLanguage = 'pt';
+        let currentLanguage = 'en';
         let lastCalculationData = null; // To store data for re-rendering on language change
         const supportedCurrencies = { "BRL": "R$", "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$" };
         const btcDonationAddress = "bc1qavu04gj53jrjwu537zdx2zz3ggycsmlv0wglhn";
@@ -771,6 +809,47 @@
                 }
             });
 
+            // Auto-switch to manual when user actually tries to edit
+            inflationRateInput.addEventListener('keydown', (e) => {
+                // Only switch if user is typing a character that would change the value
+                if (inflationRateInput.readOnly &&
+                    (e.key.match(/[0-9.,]/) || e.key === 'Backspace' || e.key === 'Delete')) {
+                    inflationYearSelect.value = 'manual';
+                    inflationRateInput.readOnly = false;
+                    // Allow the keypress to go through after removing readonly
+                    setTimeout(() => {
+                        const event = new KeyboardEvent('keydown', {
+                            key: e.key,
+                            code: e.code,
+                            keyCode: e.keyCode,
+                            which: e.which,
+                            bubbles: true
+                        });
+                        inflationRateInput.dispatchEvent(event);
+                    }, 0);
+                }
+            });
+
+            btcGrowthRateInput.addEventListener('keydown', (e) => {
+                // Only switch if user is typing a character that would change the value
+                if (btcGrowthRateInput.readOnly &&
+                    (e.key.match(/[0-9.,]/) || e.key === 'Backspace' || e.key === 'Delete')) {
+                    btcYearSelect.value = 'manual';
+                    btcGrowthRateInput.readOnly = false;
+                    // Allow the keypress to go through after removing readonly
+                    setTimeout(() => {
+                        const event = new KeyboardEvent('keydown', {
+                            key: e.key,
+                            code: e.code,
+                            keyCode: e.keyCode,
+                            which: e.which,
+                            bubbles: true
+                        });
+                        btcGrowthRateInput.dispatchEvent(event);
+                    }, 0);
+                }
+            });
+
             // --- Donation Modal Logic ---
 
             // Tab switching logic
@@ -832,6 +911,19 @@
             historicalDataLoader.classList.add('hidden');
             advancedSettingsGrid.classList.remove('hidden');
             renderLanguage(currentLanguage); // Initial render
+
+            // Show language tip after 2 seconds
+            setTimeout(() => {
+                const langTip = document.getElementById('lang-tip');
+                langTip.classList.remove('opacity-0');
+                langTip.classList.add('opacity-100');
+
+                // Hide tip after 7 seconds
+                setTimeout(() => {
+                    langTip.classList.remove('opacity-100');
+                    langTip.classList.add('opacity-0');
+                }, 7000);
+            }, 2000);
         }
 
         form.addEventListener('submit', handleCalculation);
