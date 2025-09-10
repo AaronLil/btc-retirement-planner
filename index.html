@@ -286,7 +286,8 @@
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-sm text-center border border-gray-700 relative">
             <button id="close-modal-btn"
                 class="absolute top-2 right-2 text-gray-500 hover:text-white text-xl">&times;</button>
-            <h3 data-lang-key="donateTitle" class="text-lg font-bold text-white mb-4">Buy me a coffee in BTC or ETH</h3>
+            <h3 data-lang-key="donateTitle" class="text-lg font-bold text-white mb-4">Buy me a coffee in BTC or USDC
+            </h3>
 
             <!-- Tabs -->
             <div class="flex bg-gray-700 rounded-lg p-1 mb-4">
@@ -294,9 +295,9 @@
                     class="flex-1 py-2 px-4 text-sm font-medium rounded-md transition bg-blue-600 text-white">
                     Bitcoin
                 </button>
-                <button id="eth-tab"
+                <button id="usdc-tab"
                     class="flex-1 py-2 px-4 text-sm font-medium rounded-md transition text-gray-300 hover:text-white">
-                    ETH (Base)
+                    USDC (Base)
                 </button>
             </div>
 
@@ -315,12 +316,12 @@
                 </div>
             </div>
 
-            <!-- ETH Content -->
-            <div id="eth-content" class="tab-content hidden">
-                <p data-lang-key="ethSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the address
-                    below to send ETH via Base network (low fees).</p>
+            <!-- USDC Content -->
+            <div id="usdc-content" class="tab-content hidden">
+                <p data-lang-key="usdcSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the address
+                    below to send USDC via Base network (low fees).</p>
                 <div class="bg-white p-2 rounded-lg inline-block mb-3">
-                    <img id="base-qr-code" src="" alt="Base ETH QR Code">
+                    <img id="base-qr-code" src="" alt="Base USDC QR Code">
                 </div>
                 <div class="bg-gray-900 p-2 rounded-lg flex items-center justify-between">
                     <input id="base-address" type="text"
@@ -372,9 +373,9 @@
         const donateBtn = document.getElementById('donate-btn');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const btcTab = document.getElementById('btc-tab');
-        const ethTab = document.getElementById('eth-tab');
+        const usdcTab = document.getElementById('usdc-tab');
         const btcContent = document.getElementById('btc-content');
-        const ethContent = document.getElementById('eth-content');
+        const usdcContent = document.getElementById('usdc-content');
         const qrCodeImg = document.getElementById('qr-code');
         const btcAddressInput = document.getElementById('btc-address');
         const copyAddressBtn = document.getElementById('copy-address-btn');
@@ -426,11 +427,11 @@
                 manual: "Manual",
                 yearsSuffix: "years",
                 developedBy: "Developed by",
-                donate: "Buy me a coffee in BTC or ETH",
-                donateTitle: "Buy me a coffee in BTC or ETH",
+                donate: "Buy me a coffee in BTC or USDC",
+                donateTitle: "Buy me a coffee in BTC or USDC",
                 donateSubtitle: "Choose your preferred network below to send a donation.",
                 btcSubtitle: "Scan the QR code or copy the Bitcoin address below to send some sats.",
-                ethSubtitle: "Scan the QR code or copy the address below to send ETH via Base network (low fees).",
+                usdcSubtitle: "Scan the QR code or copy the address below to send USDC via Base network (low fees).",
                 copy: "Copy",
                 copied: "Copied!",
                 legalDisclaimerTitle: "Disclaimer:",
@@ -468,11 +469,11 @@
                 manual: "Manual",
                 yearsSuffix: "anos",
                 developedBy: "Desenvolvido por",
-                donate: "Me compre um café em BTC ou ETH",
-                donateTitle: "Me compre um café em BTC ou ETH",
+                donate: "Me compre um café em BTC ou USDC",
+                donateTitle: "Me compre um café em BTC ou USDC",
                 donateSubtitle: "Escolha sua rede preferida abaixo para enviar uma doação.",
                 btcSubtitle: "Escaneie o QR code ou copie o endereço Bitcoin abaixo para enviar alguns satoshis.",
-                ethSubtitle: "Escaneie o QR code ou copie o endereço abaixo para enviar ETH via rede Base (taxas baixas).",
+                usdcSubtitle: "Escaneie o QR code ou copie o endereço abaixo para enviar USDC via rede Base (taxas baixas).",
                 copy: "Copiar",
                 copied: "Copiado!",
                 legalDisclaimerTitle: "Aviso Legal:",
@@ -863,23 +864,23 @@
             }
 
             btcTab.addEventListener('click', () => {
-                switchTab(btcTab, btcContent, ethTab, ethContent);
+                switchTab(btcTab, btcContent, usdcTab, usdcContent);
             });
 
-            ethTab.addEventListener('click', () => {
-                switchTab(ethTab, ethContent, btcTab, btcContent);
+            usdcTab.addEventListener('click', () => {
+                switchTab(usdcTab, usdcContent, btcTab, btcContent);
             });
 
             donateBtn.addEventListener('click', () => {
                 // Load both QR codes when modal opens
                 btcAddressInput.value = btcDonationAddress;
                 qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${btcDonationAddress}`;
-                // ETH na Base (chain_id=8453)
+                // USDC na Base (chain_id=8453)
                 baseAddressInput.value = baseDonationAddress;
                 baseQrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${baseDonationAddress}`;
 
                 // Reset to BTC tab by default
-                switchTab(btcTab, btcContent, ethTab, ethContent);
+                switchTab(btcTab, btcContent, usdcTab, usdcContent);
                 donateModal.classList.remove('hidden');
             });
 
