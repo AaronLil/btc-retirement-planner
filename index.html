@@ -434,7 +434,7 @@
                 annualInflation: "Annual Inflation (%)",
                 annualBtcGrowth: "Annual BTC Growth (%)",
                 lifeExpectancy: "Life Expectancy (years)",
-                disclaimerAdvanced: "These values are assumptions for the calculation. The growth of Bitcoin is highly speculative.",
+                disclaimerAdvanced: "These values are assumptions for the calculation. The growth of Bitcoin is highly speculative. * = incomplete year.",
                 calculate: "Calculate",
                 resultsTitle: "Your Plan's Results",
                 yourGoal: "Your Goal (Capital to last until age {age})",
@@ -480,7 +480,7 @@
                 annualInflation: "Inflação anual (%)",
                 annualBtcGrowth: "Cresc. anual do BTC (%)",
                 lifeExpectancy: "Expectativa de Vida (anos)",
-                disclaimerAdvanced: "Esses valores são suposições para o cálculo. O crescimento do Bitcoin é altamente especulativo.",
+                disclaimerAdvanced: "Esses valores são suposições para o cálculo. O crescimento do Bitcoin é altamente especulativo. * = ano incompleto.",
                 calculate: "Calcular",
                 resultsTitle: "Resultado do seu Plano",
                 yourGoal: "Sua Meta (Patrimônio para durar até os {age} anos)",
@@ -545,6 +545,9 @@
                     }
                 }
             });
+            // Update dropdowns with translated text
+            populateSelect(inflationYearSelect, historicalIpca);
+            populateSelect(btcYearSelect, historicalBtcGrowth);
             handleCurrencyChange();
             if (lastCalculationData && !resultsDiv.classList.contains('hidden')) {
                 displayResults(lastCalculationData);
@@ -597,22 +600,34 @@
                 const data = await response.json();
                 if (data.Response !== 'Success' || !data.Data || !data.Data.Data) throw new Error('API de histórico do BTC retornou uma resposta inválida.');
                 const prices = data.Data.Data;
-                const firstPriceByYear = {};
+
+                // Get the LAST available price for each year (closest to Dec 31st)
+                const lastPriceByYear = {};
                 prices.forEach(dayData => {
                     const year = new Date(dayData.time * 1000).getUTCFullYear();
-                    if (!firstPriceByYear[year]) {
-                        firstPriceByYear[year] = dayData.close;
-                    }
+                    lastPriceByYear[year] = dayData.close; // Keeps overwriting, so last one wins
                 });
-                const years = Object.keys(firstPriceByYear).sort();
+
+                // Get current year to mark incomplete data
+                const currentYear = new Date().getUTCFullYear();
+
+                // Calculate year-over-year growth using year-end prices
+                const years = Object.keys(lastPriceByYear).sort();
                 for (let i = 1; i < years.length; i++) {
-                    const year = years[i];
-                    const prevYear = years[i - 1];
-                    const priceThisYear = firstPriceByYear[year];
-                    const pricePrevYear = firstPriceByYear[prevYear];
+                    const year = parseInt(years[i]);
+                    const prevYear = parseInt(years[i - 1]);
+
+                    const priceThisYear = lastPriceByYear[year];
+                    const pricePrevYear = lastPriceByYear[prevYear];
+
                     if (pricePrevYear > 0) {
                         const growth = ((priceThisYear / pricePrevYear) - 1) * 100;
-                        historicalBtcGrowth[year] = parseFloat(growth.toFixed(2));
+                        // Mark current year as partial (incomplete)
+                        if (year === currentYear) {
+                            historicalBtcGrowth[`${year}_partial`] = parseFloat(growth.toFixed(2));
+                        } else {
+                            historicalBtcGrowth[year] = parseFloat(growth.toFixed(2));
+                        }
                     }
                 }
             } catch (error) {
@@ -625,11 +640,23 @@
         // --- UI Population & Handlers ---
         function populateSelect(selectElement, data) {
             selectElement.innerHTML = `<option value="manual">${translations[currentLanguage].manual}</option>`;
-            const sortedYears = Object.keys(data).sort((a, b) => b - a);
+            const sortedYears = Object.keys(data).sort((a, b) => {
+                // Extract year numbers for proper sorting
+                const yearA = parseInt(a.replace('_partial', ''));
+                const yearB = parseInt(b.replace('_partial', ''));
+                return yearB - yearA; // Descending order (most recent first)
+            });
             sortedYears.forEach(year => {
                 const option = document.createElement('option');
                 option.value = year;
-                option.textContent = year;
+                // Check if year is marked as partial
+                if (year.includes('_partial')) {
+                    const cleanYear = year.replace('_partial', '');
+                    option.value = year;
+                    option.textContent = `${cleanYear}*`;
+                } else {
+                    option.textContent = year;
+                }
                 selectElement.appendChild(option);
             });
         }
