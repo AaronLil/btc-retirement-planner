@@ -274,7 +274,7 @@
                     class="text-blue-400 hover:text-blue-300">Aaron Lil</a>
                 <span>&bull;</span>
                 <button id="donate-btn" data-lang-key="donate"
-                    class="text-blue-400 hover:text-blue-300 font-semibold">Buy me a coffee in BTC</button>
+                    class="text-blue-400 hover:text-blue-300 font-semibold">Buy me a coffee</button>
             </p>
         </footer>
 
@@ -283,26 +283,46 @@
     <!-- Donation Modal -->
     <div id="donate-modal"
         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-sm text-center border border-gray-700 relative">
+        <div id="modal-content"
+            class="bg-gray-800 rounded-lg p-6 w-full max-w-sm text-center border border-gray-700 relative">
             <button id="close-modal-btn"
                 class="absolute top-2 right-2 text-gray-500 hover:text-white text-xl">&times;</button>
-            <h3 data-lang-key="donateTitle" class="text-lg font-bold text-white mb-4">Buy me a coffee in BTC or USDC
+            <h3 data-lang-key="donateTitle" class="text-lg font-bold text-white mb-4">Buy me a coffee
             </h3>
 
             <!-- Tabs -->
             <div class="flex bg-gray-700 rounded-lg p-1 mb-4">
-                <button id="btc-tab"
-                    class="flex-1 py-2 px-4 text-sm font-medium rounded-md transition bg-blue-600 text-white">
-                    Bitcoin
+                <button id="lightning-tab"
+                    class="flex-1 py-2 px-3 text-sm font-medium rounded-md transition bg-blue-600 text-white">
+                    <span data-lang-key="lightning">Lightning</span>
                 </button>
-                <button id="usdc-tab"
-                    class="flex-1 py-2 px-4 text-sm font-medium rounded-md transition text-gray-300 hover:text-white">
-                    USDC (Base)
+                <button id="btc-tab"
+                    class="flex-1 py-2 px-3 text-sm font-medium rounded-md transition text-gray-300 hover:text-white">
+                    <span data-lang-key="bitcoin">Bitcoin</span>
+                </button>
+                <button id="stablecoins-tab"
+                    class="flex-1 py-2 px-3 text-sm font-medium rounded-md transition text-gray-300 hover:text-white">
+                    <span data-lang-key="stablecoins">Stablecoins</span>
                 </button>
             </div>
 
+            <!-- Lightning Content -->
+            <div id="lightning-content" class="tab-content">
+                <p data-lang-key="lightningSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the
+                    Lightning address below to send instantly.</p>
+                <div class="bg-white p-2 rounded-lg inline-block mb-3">
+                    <img id="lightning-qr-code" src="" alt="Lightning QR Code">
+                </div>
+                <div class="bg-gray-900 p-2 rounded-lg flex items-center justify-between">
+                    <input id="lightning-address" type="text"
+                        class="bg-transparent text-xs text-gray-300 w-full outline-none mr-2" readonly>
+                    <button id="copy-lightning-btn" data-lang-key="copy"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-md whitespace-nowrap">Copy</button>
+                </div>
+            </div>
+
             <!-- BTC Content -->
-            <div id="btc-content" class="tab-content">
+            <div id="btc-content" class="tab-content hidden">
                 <p data-lang-key="btcSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the Bitcoin
                     address below to send some sats.</p>
                 <div class="bg-white p-2 rounded-lg inline-block mb-3">
@@ -316,17 +336,17 @@
                 </div>
             </div>
 
-            <!-- USDC Content -->
-            <div id="usdc-content" class="tab-content hidden">
-                <p data-lang-key="usdcSubtitle" class="text-sm text-gray-400 mb-4">Scan the QR code or copy the address
-                    below to send USDC via Base network (low fees).</p>
+            <!-- Stablecoins Content -->
+            <div id="stablecoins-content" class="tab-content hidden">
+                <p data-lang-key="stablecoinsSubtitle" class="text-sm text-gray-400 mb-4">Send USDC/USDT on Base or
+                    Polygon networks.</p>
                 <div class="bg-white p-2 rounded-lg inline-block mb-3">
-                    <img id="base-qr-code" src="" alt="Base USDC QR Code">
+                    <img id="stablecoins-qr-code" src="" alt="Stablecoins QR Code">
                 </div>
                 <div class="bg-gray-900 p-2 rounded-lg flex items-center justify-between">
-                    <input id="base-address" type="text"
+                    <input id="stablecoins-address" type="text"
                         class="bg-transparent text-xs text-gray-300 w-full outline-none mr-2" readonly>
-                    <button id="copy-base-btn" data-lang-key="copy"
+                    <button id="copy-stablecoins-btn" data-lang-key="copy"
                         class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-md whitespace-nowrap">Copy</button>
                 </div>
             </div>
@@ -372,16 +392,21 @@
         const donateModal = document.getElementById('donate-modal');
         const donateBtn = document.getElementById('donate-btn');
         const closeModalBtn = document.getElementById('close-modal-btn');
+        const lightningTab = document.getElementById('lightning-tab');
         const btcTab = document.getElementById('btc-tab');
-        const usdcTab = document.getElementById('usdc-tab');
+        const stablecoinsTab = document.getElementById('stablecoins-tab');
+        const lightningContent = document.getElementById('lightning-content');
         const btcContent = document.getElementById('btc-content');
-        const usdcContent = document.getElementById('usdc-content');
+        const stablecoinsContent = document.getElementById('stablecoins-content');
+        const lightningQrCodeImg = document.getElementById('lightning-qr-code');
+        const lightningAddressInput = document.getElementById('lightning-address');
+        const copyLightningBtn = document.getElementById('copy-lightning-btn');
         const qrCodeImg = document.getElementById('qr-code');
         const btcAddressInput = document.getElementById('btc-address');
         const copyAddressBtn = document.getElementById('copy-address-btn');
-        const baseQrCodeImg = document.getElementById('base-qr-code');
-        const baseAddressInput = document.getElementById('base-address');
-        const copyBaseBtn = document.getElementById('copy-base-btn');
+        const stablecoinsQrCodeImg = document.getElementById('stablecoins-qr-code');
+        const stablecoinsAddressInput = document.getElementById('stablecoins-address');
+        const copyStablecoinsBtn = document.getElementById('copy-stablecoins-btn');
 
 
         // --- Data Storage, Config & Language ---
@@ -391,8 +416,9 @@
         let currentLanguage = 'en';
         let lastCalculationData = null; // To store data for re-rendering on language change
         const supportedCurrencies = { "BRL": "R$", "USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥", "AUD": "A$" };
-        const btcDonationAddress = "bc1ptnwnqwcer9r4rxefd4v55cj3zh0h35haq330lgy0glzwwze83pzsrjzz34";
-        const baseDonationAddress = "0xCee5e9660Abd528019A530888dCe40bA86f6fD17";
+        const lightningDonationAddress = "lnbc1p5hslkzpp5awpkdvj6q74n5f2uqwf64n84k6kznuugdcrr7fe8dnqvwvcwpydsdq2gdhkven9v5cqzzsxqyz5vqsp536svvty47jkdwy24zxrytu749v80c5p52u2nt6fq7vejcr5wqclq9qyyssqpzpek96z6d5xmjz9zemddkrt6y8tyxfdwvcee6afqem7mywcetss8sgvledh77wmr4h5zsft6s7u8405slr0cpvpyzz3ma3zdlzw77sqs694wc";
+        const btcDonationAddress = "bc1p45yehp059z785jvxkahvc9pl5pxjfm2we87tzu80x382px69h2xs07gv76";
+        const stablecoinsDonationAddress = "0x43deB7e21D2a72dfc2B7Bbc82910d8A08d17B9B7";
 
         const translations = {
             en: {
@@ -427,11 +453,15 @@
                 manual: "Manual",
                 yearsSuffix: "years",
                 developedBy: "Developed by",
-                donate: "Buy me a coffee in BTC or USDC",
-                donateTitle: "Buy me a coffee in BTC or USDC",
+                donate: "Buy me a coffee",
+                donateTitle: "Buy me a coffee",
                 donateSubtitle: "Choose your preferred network below to send a donation.",
+                lightning: "Lightning",
+                bitcoin: "Bitcoin",
+                stablecoins: "Stablecoins",
+                lightningSubtitle: "Scan the QR code or copy the Lightning address below to send instantly.",
                 btcSubtitle: "Scan the QR code or copy the Bitcoin address below to send some sats.",
-                usdcSubtitle: "Scan the QR code or copy the address below to send USDC via Base network (low fees).",
+                stablecoinsSubtitle: "Send USDC/USDT on Base or Polygon networks.",
                 copy: "Copy",
                 copied: "Copied!",
                 legalDisclaimerTitle: "Disclaimer:",
@@ -469,11 +499,15 @@
                 manual: "Manual",
                 yearsSuffix: "anos",
                 developedBy: "Desenvolvido por",
-                donate: "Me compre um café em BTC ou USDC",
-                donateTitle: "Me compre um café em BTC ou USDC",
+                donate: "Me compre um café",
+                donateTitle: "Me compre um café",
                 donateSubtitle: "Escolha sua rede preferida abaixo para enviar uma doação.",
+                lightning: "Lightning",
+                bitcoin: "Bitcoin",
+                stablecoins: "Stablecoins",
+                lightningSubtitle: "Escaneie o QR code ou copie o endereço Lightning abaixo para enviar instantaneamente.",
                 btcSubtitle: "Escaneie o QR code ou copie o endereço Bitcoin abaixo para enviar alguns satoshis.",
-                usdcSubtitle: "Escaneie o QR code ou copie o endereço abaixo para enviar USDC via rede Base (taxas baixas).",
+                stablecoinsSubtitle: "Envie USDC/USDT nas redes Base ou Polygon.",
                 copy: "Copiar",
                 copied: "Copiado!",
                 legalDisclaimerTitle: "Aviso Legal:",
@@ -853,60 +887,145 @@
 
             // --- Donation Modal Logic ---
 
-            // Tab switching logic
-            function switchTab(activeTab, activeContent, inactiveTab, inactiveContent) {
-                activeTab.classList.add('bg-blue-600', 'text-white');
-                activeTab.classList.remove('text-gray-300');
-                inactiveTab.classList.remove('bg-blue-600', 'text-white');
-                inactiveTab.classList.add('text-gray-300');
-                activeContent.classList.remove('hidden');
-                inactiveContent.classList.add('hidden');
+            // Tab switching logic for 3 tabs
+            function switchTab(activeTabId) {
+                const tabs = [lightningTab, btcTab, stablecoinsTab];
+                const contents = [lightningContent, btcContent, stablecoinsContent];
+
+                tabs.forEach((tab, index) => {
+                    if (tab.id === activeTabId) {
+                        tab.classList.add('bg-blue-600', 'text-white');
+                        tab.classList.remove('text-gray-300');
+                        contents[index].classList.remove('hidden');
+                    } else {
+                        tab.classList.remove('bg-blue-600', 'text-white');
+                        tab.classList.add('text-gray-300');
+                        contents[index].classList.add('hidden');
+                    }
+                });
             }
 
-            btcTab.addEventListener('click', () => {
-                switchTab(btcTab, btcContent, usdcTab, usdcContent);
+            lightningTab.addEventListener('click', () => {
+                switchTab('lightning-tab');
             });
 
-            usdcTab.addEventListener('click', () => {
-                switchTab(usdcTab, usdcContent, btcTab, btcContent);
+            btcTab.addEventListener('click', () => {
+                switchTab('btc-tab');
+            });
+
+            stablecoinsTab.addEventListener('click', () => {
+                switchTab('stablecoins-tab');
             });
 
             donateBtn.addEventListener('click', () => {
-                // Load both QR codes when modal opens
+                // Load all QR codes when modal opens
+                lightningAddressInput.value = lightningDonationAddress;
+                lightningQrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=lightning:${lightningDonationAddress}`;
+
                 btcAddressInput.value = btcDonationAddress;
                 qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${btcDonationAddress}`;
-                // USDC na Base (chain_id=8453)
-                baseAddressInput.value = baseDonationAddress;
-                baseQrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${baseDonationAddress}`;
 
-                // Reset to BTC tab by default
-                switchTab(btcTab, btcContent, usdcTab, usdcContent);
+                stablecoinsAddressInput.value = stablecoinsDonationAddress;
+                stablecoinsQrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${stablecoinsDonationAddress}`;
+
+                // Reset to Lightning tab by default
+                switchTab('lightning-tab');
                 donateModal.classList.remove('hidden');
             });
 
             closeModalBtn.addEventListener('click', () => donateModal.classList.add('hidden'));
+
+            // Track where mousedown started to only close modal if both mousedown and mouseup are outside
+            let mouseDownOutside = false;
+
+            donateModal.addEventListener('mousedown', (e) => {
+                const modalContent = document.getElementById('modal-content');
+                mouseDownOutside = !modalContent.contains(e.target);
+            });
+
             donateModal.addEventListener('click', (e) => {
-                if (e.target === donateModal) {
+                const modalContent = document.getElementById('modal-content');
+                const mouseUpOutside = !modalContent.contains(e.target);
+
+                // Only close if both mousedown and mouseup happened outside the modal content
+                if (mouseDownOutside && mouseUpOutside) {
                     donateModal.classList.add('hidden');
                 }
             });
 
-            copyAddressBtn.addEventListener('click', () => {
-                btcAddressInput.select();
-                document.execCommand('copy');
-                copyAddressBtn.textContent = translations[currentLanguage].copied;
-                setTimeout(() => {
-                    copyAddressBtn.textContent = translations[currentLanguage].copy;
-                }, 1500);
+            copyLightningBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(lightningAddressInput.value);
+                    copyLightningBtn.textContent = translations[currentLanguage].copied;
+                    setTimeout(() => {
+                        copyLightningBtn.textContent = translations[currentLanguage].copy;
+                    }, 1500);
+                } catch (err) {
+                    // Fallback using temporary invisible element
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = lightningAddressInput.value;
+                    tempTextArea.style.position = 'fixed';
+                    tempTextArea.style.left = '-9999px';
+                    tempTextArea.style.top = '-9999px';
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempTextArea);
+                    copyLightningBtn.textContent = translations[currentLanguage].copied;
+                    setTimeout(() => {
+                        copyLightningBtn.textContent = translations[currentLanguage].copy;
+                    }, 1500);
+                }
             });
 
-            copyBaseBtn.addEventListener('click', () => {
-                baseAddressInput.select();
-                document.execCommand('copy');
-                copyBaseBtn.textContent = translations[currentLanguage].copied;
-                setTimeout(() => {
-                    copyBaseBtn.textContent = translations[currentLanguage].copy;
-                }, 1500);
+            copyAddressBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(btcAddressInput.value);
+                    copyAddressBtn.textContent = translations[currentLanguage].copied;
+                    setTimeout(() => {
+                        copyAddressBtn.textContent = translations[currentLanguage].copy;
+                    }, 1500);
+                } catch (err) {
+                    // Fallback using temporary invisible element
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = btcAddressInput.value;
+                    tempTextArea.style.position = 'fixed';
+                    tempTextArea.style.left = '-9999px';
+                    tempTextArea.style.top = '-9999px';
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempTextArea);
+                    copyAddressBtn.textContent = translations[currentLanguage].copied;
+                    setTimeout(() => {
+                        copyAddressBtn.textContent = translations[currentLanguage].copy;
+                    }, 1500);
+                }
+            });
+
+            copyStablecoinsBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(stablecoinsAddressInput.value);
+                    copyStablecoinsBtn.textContent = translations[currentLanguage].copied;
+                    setTimeout(() => {
+                        copyStablecoinsBtn.textContent = translations[currentLanguage].copy;
+                    }, 1500);
+                } catch (err) {
+                    // Fallback using temporary invisible element
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = stablecoinsAddressInput.value;
+                    tempTextArea.style.position = 'fixed';
+                    tempTextArea.style.left = '-9999px';
+                    tempTextArea.style.top = '-9999px';
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempTextArea);
+                    copyStablecoinsBtn.textContent = translations[currentLanguage].copied;
+                    setTimeout(() => {
+                        copyStablecoinsBtn.textContent = translations[currentLanguage].copy;
+                    }, 1500);
+                }
             });
 
             historicalDataLoader.classList.add('hidden');
